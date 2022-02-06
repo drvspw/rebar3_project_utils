@@ -6,8 +6,7 @@
    [kernel,
     stdlib,
     bbmustache,
-    cuttlefish,
-    rebar3_lint
+    cuttlefish
    ]},
   {env,[]},
   {modules, []},

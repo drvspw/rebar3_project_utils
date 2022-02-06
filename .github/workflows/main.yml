@@ -1,0 +1,62 @@
+name: Release the plugin
+
+on:
+  push:
+    branch: "master"
+
+jobs:
+  tag:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - run: |
+          TAG=$(cat src/rebar3_project_utils.app.src | grep vsn | grep -o '".*"' | sed 's/"//g')
+          echo "TAG=$TAG" >> $GITHUB_ENV
+          echo "$TAG" > tag.txt
+
+      - run: echo "Creating tag ${{ env.TAG }}"
+
+      - uses: rickstaa/action-create-tag@v1
+        with:
+          tag: "${{ env.TAG }}"
+          message: "Release ${{ env.TAG }}"
+          force_push_tag: false
+
+      - name: Store tag.txt as artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: tag
+          path: tag.txt
+
+  release:
+    needs: tag
+
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Download tag.txt
+      uses: actions/download-artifact@v2
+      with:
+        name: tag
+
+    - run: |
+        TAG=$(cat tag.txt)
+        echo "TAG=$TAG" >> $GITHUB_ENV
+
+    - uses: ncipollo/release-action@v1
+      with:
+        tag: ${{ env.TAG }}
+        omitBody: true
+        allowUpdates: false
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Delete artifacts
+      uses: geekyeggo/delete-artifact@v1
+      with:
+        name: |
+          tag

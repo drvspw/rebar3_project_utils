@@ -7,8 +7,8 @@
 -spec init(rebar_state:t()) -> {ok, rebar_state:t()}.
 init(State) ->
     %% get list of providers to initalize
-    Providers1 = add_release_providers(rebar_state:get(State, relx), ?DEFAULT_PROVIDERS),
-    Providers2 = add_bump_provider(rebar_state:get(State, escript_name), Providers1),
+    Providers1 = add_release_providers(rebar_state:get(State, relx, undefined), ?DEFAULT_PROVIDERS),
+    Providers2 = add_bump_provider(rebar_state:get(State, escript_name, undefined), Providers1),
 
     %% initialize providers
     FinalState = init_providers(State, Providers2),
