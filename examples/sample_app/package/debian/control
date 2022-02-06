@@ -1,0 +1,16 @@
+Package: {{package}}
+Version: {{version}}
+Depends:
+Architecture: amd64
+Maintainer: Venkatakumar Srinivasan
+Provides: {{package}}
+Section: server
+Priority: optional
+Multi-Arch: foreign
+Homepage: https://github.com/drvspw/{{name}}
+XBS-Comment: This package in built from a branch
+Description: A debian package for {{name}} service
+ .
+ Usage of this product is subject to licensing limitations, please
+ read the license document before using this product.
+ .

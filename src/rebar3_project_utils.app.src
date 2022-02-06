@@ -1,0 +1,17 @@
+{application, rebar3_project_utils,
+ [{description, "A rebar plugin"},
+  {vsn, "0.1.0"},
+  {registered, []},
+  {applications,
+   [kernel,
+    stdlib,
+    bbmustache,
+    cuttlefish,
+    rebar3_lint
+   ]},
+  {env,[]},
+  {modules, []},
+
+  {licenses, ["Apache 2.0"]},
+  {links, [{"Github", "https://github.com/drvspw/rebar3_project_utils.git"}]}
+ ]}.

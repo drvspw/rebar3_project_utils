@@ -1,0 +1,12 @@
+#!/bin/sh -e
+
+# Enable services
+if [ X != "X$(pidof systemd)" ]; then
+  echo "Disable {{name}} service"
+  systemctl disable {{name}}.service
+  systemctl daemon-reload
+else
+  echo "systemd not available. start services manually"
+fi
+
+exit 0

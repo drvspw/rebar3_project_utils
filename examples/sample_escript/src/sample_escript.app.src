@@ -1,0 +1,17 @@
+{application, sample_escript,
+ [{description, "An escript"},
+  {vsn, "1.0.0"},
+  {registered, []},
+  {applications,
+   [kernel
+    ,stdlib
+%%    ,uuidv4
+    ,getopt
+   ]},
+
+  {env,[]},
+  {modules, []},
+
+  {licenses, ["Apache 2.0"]},
+  {links, [{"Github", "https://github.com/drvspw/sample_escript.git"}]}
+ ]}.

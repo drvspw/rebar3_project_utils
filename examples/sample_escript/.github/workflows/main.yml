@@ -1,0 +1,94 @@
+
+name: sample_escript build
+
+on: [push]
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    container:
+      image: erlang:22.2.3
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+
+    - name: Generate sample_escript escript
+      run: make release
+
+    - name: Check sample_escript version
+      run: |
+        _build/default/bin/sample_escript version | sed -e 's/Version: //' > version.txt
+        cat version.txt
+
+    - name: Store sample_escript as artifact
+      if: endsWith(github.ref, 'refs/heads/master')
+      uses: actions/upload-artifact@v2
+      with:
+        name: sample_escript
+        path: _build/default/bin/sample_escript
+
+    - name: Store version.txt as artifact
+      if: endsWith(github.ref, 'refs/heads/master')
+      uses: actions/upload-artifact@v2
+      with:
+        name: sample_escript-version
+        path: version.txt
+
+  release:
+    needs: build
+
+    runs-on: ubuntu-latest
+
+    if: endsWith(github.ref, 'refs/heads/master')
+
+    steps:
+    - name: Set up Go 1.17
+      uses: actions/setup-go@v1
+      with:
+        go-version: 1.17
+      id: go
+
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Download version.txt
+      uses: actions/download-artifact@v2
+      with:
+        name: sample_escript-version
+
+    - name: Download sample_escript
+      uses: actions/download-artifact@v2
+      with:
+        name: sample_escript
+
+    - name: Push Tag
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+
+      run: |
+        go install github.com/tcnksm/ghr@v0.14.0
+        VERSION=$(cat version.txt)
+        REPO=sample_escript
+        OWNER=drvspw
+        echo -n "Releasing ${VERSION}..."
+        $HOME/go/bin/ghr \
+            -t ${GITHUB_TOKEN} \
+            -u ${OWNER} \
+            -r ${REPO} \
+            -c ${GITHUB_SHA} \
+            -delete \
+            ${VERSION} \
+           ./sample_escript
+        echo "done!"
+
+    - name: Delete artifacts
+      uses: geekyeggo/delete-artifact@v1
+      with:
+        name: |
+          sample_escript-version
+          sample_escript

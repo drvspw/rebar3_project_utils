@@ -1,0 +1,2 @@
+## Do not export to source archive in github release
+* export-ignore
