@@ -1,0 +1,49 @@
+%%-*- mode: erlang -*-
+
+%% SASL configuration
+%% @doc Disable SASL error logger
+{mapping, "sasl_error_logger", "sasl.sasl_error_logger",
+ [{datatype, {atom, false}},
+  {default, false},
+  hidden
+ ]}.
+
+%% @doc SASL log level.
+%%
+{mapping, "sasl.logger_type", "sasl.errlog_type",
+ [{datatype, {enum, [error, progress, all]}},
+  {default, error}
+ ]}.
+
+%% @doc SASL log dir
+%%
+{mapping, "sasl.logger_dir", "sasl.error_logger_mf_dir",
+ [{default, "{{log_dir}}/{{node_name}}/sasl"}
+ ]}.
+
+%% @doc SASL max log files retained
+%%
+{mapping, "sasl_logger_maxfiles", "sasl.error_logger_mf_maxfiles",
+ [{datatype, integer},
+  {default, 5},
+  {validators, ["range:1-10"]}
+]}.
+
+%% @doc SASL max log file size in MB
+%%
+%% Default is 10MB
+{mapping, "sasl_logger_file_size", "sasl.error_logger_mf_maxbytes",
+ [{datatype, integer},
+  {default, 10},
+  {validators, ["range:1-10"]}
+]}.
+
+{translation, "sasl.error_logger_mf_maxbytes",
+ fun(Conf) ->
+         MB = cuttlefish:conf_get("sasl_logger_file_size", Conf),
+         MB * 1024 * 1024
+ end
+}.
+
+{validator, "range:1-10", "must be 1 to 10",
+ fun(X) -> X >= 1 andalso X =< 10 end}.

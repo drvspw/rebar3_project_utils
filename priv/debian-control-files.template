@@ -1,0 +1,10 @@
+{description, "This template does a thing"}.
+{variables, [
+    {debian_dir, "./package/debian", "The directory where the application goes"}
+  ]}.
+{dir, "{{debian_dir}}"}.
+{template, "control", "{{debian_dir}}/control"}.
+{template, "postinst", "{{debian_dir}}/postinst"}.
+{chmod, "{{debian_dir}}/postinst", 8#755}.
+{template, "prerm", "{{debian_dir}}/prerm"}.
+{chmod, "{{debian_dir}}/prerm", 8#755}.

@@ -1,0 +1,19 @@
+{application, sample_service,
+ [{description, "An OTP release"},
+  {vsn, {cmd, "rebar3 bump"}},
+  {registered, []},
+  {mod, {'sample_service', []}},
+  {applications,
+   [kernel
+    ,stdlib
+%%    ,uuidv4
+    ,sasl
+    ,epmdlib
+   ]},
+
+  {env,[]},
+  {modules, []},
+
+  {licenses, ["Apache 2.0"]},
+  {links, [{"Github", "https://github.com/drvspw/sample_service.git"}]}
+ ]}.

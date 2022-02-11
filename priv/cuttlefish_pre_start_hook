@@ -1,0 +1,35 @@
+#!/bin/bash
+
+set -e
+
+ESCRIPT_CMD=
+
+## Generate {{release_name}}.conf file
+echo -n "Generating configuration files from schemas in $PWD/share/schema..."
+
+##
+case $1 in
+    test)
+	ESCRIPT_CMD=escript
+	;;
+    *)
+	ESCRIPT_CMD=relx_escript
+	;;
+esac
+
+
+$ESCRIPT_CMD ./bin/cuttlefish \
+             --etc_dir $PWD/etc \
+             --dest_dir $PWD/generated.conf \
+             --schema_dir $PWD/share/schema/ \
+             --conf_file $PWD/etc/{{release_name}}.conf \
+             --allow_extra \
+	     --max_history 1 \
+	     --silent
+echo "Done!"
+
+## Copy the generated files to releases/{{release_version}}/
+app_config=$(ls -t $PWD/generated.conf/app*.config | head -1)
+vm_args=$(ls -t $PWD/generated.conf/vm*.args | head -1)
+cp ${vm_args} $PWD/releases/{{release_version}}/generated.vm.args
+cp ${app_config} $PWD/releases/{{release_version}}/generated.sys.config

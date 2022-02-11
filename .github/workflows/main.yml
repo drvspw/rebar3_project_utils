@@ -2,7 +2,8 @@ name: Release the plugin
 
 on:
   push:
-    branch: "master"
+    branches:
+      - master
 
 jobs:
   tag:

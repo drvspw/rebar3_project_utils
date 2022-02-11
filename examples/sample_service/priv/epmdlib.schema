@@ -1,0 +1,39 @@
+%%-*- mode: erlang -*-
+
+%% @doc The module that implements erlang distribution protocol. The module is
+%% should end with `_dist`, for eg. `my_module_dist`. The value for this property
+%% should be `my_module` (not without `_dist`).
+{mapping, "erlang.distribution.module", "vm_args.-proto_dist",
+ [
+  {datatype, atom},
+  {default, epmdlib_common}
+ ]}.
+
+%% @doc Network transport for erlang distribution protocol.
+{mapping, "erlang.distribution.transport", "vm_args.-epmdlib_dist_transport",
+ [
+  {datatype, {enum, [tcp, tcp6, tls, tls6]}},
+  {default, {{erlang_distribution_transport}}}
+ ]}.
+
+%% @doc SSL Options for tls or tls6 distribution protocol. The setting
+%% is ignored if the distribution protocol is tcp or tcp6.
+{mapping, "erlang.distribution.ssl.optfile", "vm_args.-ssl_dist_optfile",
+ [
+  {default, "{{install_dir}}/{{node_name}}/releases/{{release_version}}/dist.conf"}
+ ]}.
+
+%% @doc The module that replaces epmd service.
+{mapping, "erlang.epmd.module", "vm_args.-epmd_module",
+ [
+  {datatype, atom},
+  {default, epmdlib_epmd_client}
+ ]}.
+
+%% @doc Disable epmd by default.
+{mapping, "erlang.epmd", "vm_args.-start_epmd",
+ [
+  {datatype, flag},
+  {default, off},
+  hidden
+ ]}.

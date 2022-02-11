@@ -28,20 +28,14 @@ init(State) ->
 -spec do(rebar_state:t()) -> {ok, rebar_state:t()} | {error, string()}.
 do(State) ->
     %% Get the releases
-    {Opts, _} = rebar_state:command_parsed_args(State),
-    RelxConfigFile = proplists:get_value(config, Opts, []),
-    RelxConfig = read_relx_config(State, RelxConfigFile),
-    {ok, RelxState} = rlx_config:to_state(RelxConfig),
-    AllReleases = highest_unique_releases(rlx_state:configured_releases(RelxState)),
-    Releases = releases_to_build(AllReleases, Opts, RelxState),
+    Releases = rebar3_project_utils:releases_to_build(State),
 
     %% Check if debian configuration is in state
     DebConfig = read_deb_config(State), %%read_deb_config(State),
 
     %% Get the directories
-    BaseDir = rebar_dir:base_dir(State),
-    RelDir = filename:join(BaseDir, "rel"),
-    DebDir = filename:join(BaseDir, "deb"),
+    RelDir = rebar3_project_utils:release_dir(State),
+    DebDir = filename:join(rebar_dir:base_dir(State), "deb"),
 
     %% create deb directory for each release
     lists:foreach( fun({Name, Vsn}) ->
@@ -102,6 +96,7 @@ do(State) ->
                                          end, proplists:get_value(systemd_unit_files, DebConfig, [])),
 
                            %% Build debian package
+                           rebar_api:info("Creating debian package ~s.deb", [filename:basename(ReleaseDebDir)]),
                            Cmd = lists:flatten(io_lib:format("dpkg-deb --build ~s ~s", [ReleaseDebDir, DebDir])),
                            rlx_util:sh(Cmd),
 
@@ -127,79 +122,3 @@ deb_package(Name) ->
 
 deb_package_dir(Name, Vsn) ->
     lists:flatten(io_lib:format("~s_~s_amd64", [deb_package(Name), Vsn])).
-
-read_relx_config(State, "") ->
-    ConfigPath = filename:join([rebar_dir:root_dir(State), "relx.config"]),
-    case rebar_state:get(State, relx, []) of
-        [] ->
-            rebar_api:debug("Configuring releases with relx.config", []),
-            read_relx_config(State, ConfigPath);
-        RebarConfig ->
-            rebar_api:debug("Configuring releases the {relx, ...} entry"
-                            " from rebar.config. Ignoring relx.config.", []),
-            RebarConfig
-    end;
-
-read_relx_config(_State, ConfigFile) ->
-    case file:consult(ConfigFile) of
-        {ok, Config} ->
-            rebar_api:debug("Configuring releases with: ~ts", [ConfigFile]),
-            Config;
-        {error, Reason} ->
-            erlang:error({config_file, ConfigFile, Reason})
-    end.
-
-releases_to_build([_] = AllReleases, _Opts, _RelxState) ->
-    AllReleases; %% if only one release configured
-
-releases_to_build(AllReleases, Opts, _RelxState)->
-    case {proplists:get_value(all, Opts, undefined),
-          proplists:get_value(relnames, Opts, undefined)} of
-        {undefined, undefined} ->
-            case proplists:get_value(relname, Opts, undefined) of
-                undefined ->
-                    erlang:error("Must specify the name of the release to build when there are multiple releases in the config");
-                R ->
-                    case proplists:get_value(relvsn, Opts, undefined) of
-                        undefined ->
-                            filter_releases(AllReleases, R);
-                        RelVsn ->
-                            [{list_to_atom(R), RelVsn}]
-                    end
-            end;
-        {true, _} ->
-            AllReleases;
-        {_, Filter} ->
-            filter_releases(AllReleases, Filter)
-    end.
-
-filter_releases(Releases, Filter) ->
-    WantReleases = [list_to_atom(Rel) || Rel <- string:split(Filter, ",", all)],
-    [
-     case proplists:lookup(Relname, Releases) of
-         none -> erlang:error({release_not_found, Relname});
-         Rel -> Rel
-     end
-     || Relname <- WantReleases
-    ].
-
-%% This function is copied verbatim from rebar3 source code.
-%% takes a map of relx configured releases and returns a list of the highest
-%% version for each unique release name
--spec highest_unique_releases(rlx_state:releases()) -> [{atom(), string() | undefined}].
-highest_unique_releases(Releases) ->
-    Unique = maps:fold(fun({Name, Vsn}, _, Acc) ->
-                               update_map_if_higher(Name, Vsn, Acc)
-                       end, #{}, Releases),
-    maps:to_list(Unique).
-
-update_map_if_higher(Name, Vsn, Acc) ->
-    maps:update_with(Name, fun(Vsn1) ->
-                                   case rlx_util:parsed_vsn_lte(rlx_util:parse_vsn(Vsn1),
-                                                                rlx_util:parse_vsn(Vsn)) of
-                                       true ->
-                                           Vsn;
-                                       false ->
-                                           Vsn1
-                                   end
-                           end, Vsn, Acc).

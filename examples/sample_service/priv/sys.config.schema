@@ -1,0 +1,129 @@
+%%-*- mode: erlang -*-
+
+%% Mnesia configuration
+%% @doc Mnesia data diretory.
+{mapping, "mnesia.dir", "mnesia.dir",
+ [
+  {commented, "{{data_dir}}/{{node_name}}-mnesia"}
+ ]}.
+
+%% @doc Default Log file
+{mapping, "logger.default.file", "kernel.logger",
+ [
+  {default, "{{log_dir}}/{{node_name}}.default.log"}
+ ]}.
+
+%% @doc Default Log level
+{mapping, "logger.default.level", "kernel.logger",
+ [
+  {datatype, {enum, [emergency, alert, critical, error, warning, notice,
+                     info, debug, all, none]}},
+
+  {default, {{log_level}}}
+ ]}.
+
+%% @doc Max number of log files to retain
+{mapping, "logger.default.max_no_files", "kernel.logger",
+ [
+  {datatype, integer},
+  {validators, ["range:1-50"]},
+  {default, 10}
+ ]}.
+
+%% @doc Max log file size in MB
+{mapping, "logger.default.max_no_bytes", "kernel.logger",
+ [
+  {datatype, integer},
+  {validators, ["range:1-50"]},
+  {default, 5}
+ ]}.
+
+%% @doc Audit log file for audit trails. All events from audit domain
+%% are logged in this file. In write logs to this file, the application
+%% has to create logs with 'audit' domain and log level 'info'. The
+%% audit log file has by default a longer retention and can be adjusted.
+%% Overload protection is disabled.
+{mapping, "logger.audit.file", "kernel.logger",
+ [
+  {default, "{{log_dir}}/{{node_name}}.audit.log"}
+ ]}.
+
+%% @doc Max number of audit log files to retain
+{mapping, "logger.audit.max_no_files", "kernel.logger",
+ [
+  {datatype, integer},
+  {validators, ["range:1-50"]},
+  {default, 50}
+ ]}.
+
+%% @doc Max audit log file size in MB
+{mapping, "logger.audit.max_no_bytes", "kernel.logger",
+ [
+  {datatype, integer},
+  {validators, ["range:1-50"]},
+  {default, 10}
+ ]}.
+
+{validator, "range:1-50", "must be 1 to 50",
+ fun(X) -> X >= 1 andalso X =< 50 end}.
+
+{translation, "kernel.logger",
+ fun(Conf) ->
+         %% get default logger configuration
+         DefaultFile = cuttlefish:conf_get("logger.default.file", Conf),
+         DefaultLevel = cuttlefish:conf_get("logger.default.level", Conf),
+         DefaultNoFiles = cuttlefish:conf_get("logger.default.max_no_files", Conf),
+         DefaultNoBytes = cuttlefish:conf_get("logger.default.max_no_bytes", Conf),
+         DefaultHandler = {handler, default, logger_disk_log_h,
+                           #{config => #{
+                                         file => DefaultFile,
+                                         type => wrap,
+                                         max_no_files => DefaultNoFiles,
+                                         max_no_bytes => DefaultNoBytes * 1024 * 1024
+                                        },
+                             level => DefaultLevel,
+                             formatter => {logger_formatter,
+                                           #{
+                                             legacy_header => false,
+                                             single_line => true,
+                                             time_offset => 0 %% UTC time
+                                           }
+                                          }
+                            }
+                          },
+
+         %% get audit logger configuration
+         AuditFile = cuttlefish:conf_get("logger.audit.file", Conf),
+         AuditNoFiles = cuttlefish:conf_get("logger.audit.max_no_files", Conf),
+         AuditNoBytes = cuttlefish:conf_get("logger.audit.max_no_bytes", Conf),
+         AuditHandler = {handler, audit_log, logger_disk_log_h,
+                           #{config => #{
+                                         file => AuditFile,
+                                         type => wrap,
+                                         max_no_files => AuditNoFiles,
+                                         max_no_bytes => AuditNoBytes * 1024 * 1024,
+                                         sync_mode_qlen => 0, % handle all events synchronously%% drop overload control
+                                         filesync_repeat_interval => 100, % fsync after 100ms when a change is made
+
+                                         drop_mode_qlen => 100000000, % ridiculously large queue before we drop
+                                         flush_qlen => 100000001, % ensure we pretty much never drop silently
+                                         burst_limit_enable => false, % no burst protection
+                                         overload_kill_enable => false % kill the whole node, not just the logger
+                                        },
+                             level => info,
+                             %% only keep what you must
+                             filters => [
+                                         {audit_filter, {fun logger_filters:domain/2, {stop, super, [audit]}}}
+                                        ],
+                             formatter => {logger_formatter,
+                                           #{
+                                             legacy_header => false,
+                                             single_line => true,
+                                             time_offset => 0 %% UTC time
+                                           }
+                                          }
+                            }
+                          },
+         [{handler, default, undefined}, DefaultHandler, AuditHandler]
+ end
+}.

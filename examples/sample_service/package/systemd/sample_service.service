@@ -1,0 +1,13 @@
+[Unit]
+Description=sample_service Service
+After=network.target
+
+[Service]
+ExecStart=/opt/sample_service/bin/sample_service daemon
+ExecStop=/opt/sample_service/bin/sample_service stop
+User=sample_service
+WorkingDirectory=/opt/sample_service/bin
+LimitNOFILE=1000000
+
+[Install]
+WantedBy=multi-user.target

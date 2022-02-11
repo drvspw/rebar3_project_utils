@@ -1,0 +1,8 @@
+{"1.2.0",
+[{<<"epmdlib">>,{pkg,<<"epmdlib">>,<<"1.0.0">>},0}]}.
+[
+{pkg_hash,[
+ {<<"epmdlib">>, <<"10BAC89EF8F1347EDDEEC695F742E21578B39CE3E0A64CCC76F02AC108A030B3">>}]},
+{pkg_hash_ext,[
+ {<<"epmdlib">>, <<"1EE19E26A3AE46CE8E25C7B4A952F9568386B0B39CDB9A4BAC263D0A6E79351F">>}]}
+].

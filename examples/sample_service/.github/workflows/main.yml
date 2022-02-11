@@ -1,0 +1,64 @@
+
+name: sample_service build
+
+on: [push]
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    container:
+      image: ghcr.io/drvspw/sample_service-build # erlang:23.3.4
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+
+    - name: Build and Test
+      run: make prod-release
+
+    - name: Create .deb file
+      run: make debian
+
+  release:
+    needs: build
+
+    runs-on: ubuntu-latest
+
+    if: endsWith(github.ref, 'refs/heads/master')
+
+    steps:
+    - name: Set up Go 1.17
+      uses: actions/setup-go@v1
+      with:
+        go-version: 1.17
+      id: go
+
+    - name: Checkout
+      uses: actions/checkout@v2
+
+
+
+    - name: Push Tag
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+
+      run: |
+        go install github.com/tcnksm/ghr@v0.14.0
+        VERSION=$(cat version.txt)
+        REPO=sample_service
+        OWNER=drvspw
+        echo -n "Releasing ${VERSION}..."
+        $HOME/go/bin/ghr \
+            -t ${GITHUB_TOKEN} \
+            -u ${OWNER} \
+            -r ${REPO} \
+            -c ${GITHUB_SHA} \
+            -delete \
+            ${VERSION} \
+            ./README.md
+        echo "done!"
+

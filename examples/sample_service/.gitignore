@@ -17,3 +17,18 @@ _build
 *.iml
 rebar3.crashdump
 *~
+
+**/src/*_pb.erl
+
+#
+# Ignore beam files
+#
+**/*.beam
+*.beam
+**/deps/
+**/ebin/
+**/_rel/
+**/_build/
+**/.rebar
+**/.DS_Store
+**/priv/build_id
