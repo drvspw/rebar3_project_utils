@@ -1,0 +1,49 @@
+#!/bin/sh -e
+
+
+XPKG={{name}}
+
+XHOME=/var/lib/${XPKG}
+XLOG=/var/log/${XPKG}
+XTMP=/var/tmp/${XPKG}
+XDATA=/var/data/${XPKG}
+
+XINST=/opt/${XPKG}
+XBIN=${XINST}/bin
+XCNF=${XINST}/conf
+
+PKG_VERSION={{version}}
+
+NOLOGIN=/usr/sbin/nologin
+
+echo "Adding the {{name}} system user and group."
+adduser --system --group --home $XHOME --shell $NOLOGIN {{name}}
+
+echo "Moving home directory to ${XHOME}"
+usermod -m -d $XHOME {{name}}
+
+echo "Changing shell to nologin"
+usermod -s $NOLOGIN {{name}}
+
+
+echo "Creating {{name}} /var directories."
+mkdir -p ${XDATA}
+mkdir -p ${XLOG}
+mkdir -p ${XTMP}
+
+echo "Setting ownership of {{name}} directories."
+chown -R {{name}}:{{name}} ${XINST}
+chown -R {{name}}:{{name}} ${XLOG}
+chown -R {{name}}:{{name}} ${XDATA}
+chown -R {{name}}:{{name}} ${XTMP}
+
+# Enable services
+if [ X != "X$(pidof systemd)" ]; then
+  echo "Enabling {{name}} service to start on boot"
+  systemctl daemon-reload
+  systemctl enable {{name}}.service
+else
+  echo "systemd not available. start services manually"
+fi
+
+exit 0
