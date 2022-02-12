@@ -1,13 +1,27 @@
 name: Release the plugin
 
-on:
-  push:
-    branches:
-      - master
+on: [push]
 
 jobs:
-  tag:
+  build:
     runs-on: ubuntu-latest
+
+    container:
+      image: erlang:23.3.4
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Compile
+        run: rebar3 compile
+
+  tag:
+    needs: build
+
+    runs-on: ubuntu-latest
+
+    if: endsWith(github.ref, 'refs/heads/master')
+
     steps:
       - uses: actions/checkout@v2
 

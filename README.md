@@ -13,7 +13,7 @@ A utility plugin that
 Add the plugin to your rebar config:
 
     {project_plugins, [
-        {rebar3_project_utils, {git, "https://host/user/rebar3_project_utils.git", {tag, "<release tag>"}}}
+        {rebar3_project_utils, {git, "https://github.com/drvspw/rebar3_project_utils.git", {tag, "<release tag>"}}}
     ]}.
 
 ### check-deps
