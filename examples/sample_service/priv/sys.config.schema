@@ -1,5 +1,8 @@
 %%-*- mode: erlang -*-
 
+{mapping, "sample_service.pool_size", "sample_service.pool_size",
+ [{datatype, integer}, {default, 1}]}.
+
 %% Mnesia configuration
 %% @doc Mnesia data diretory.
 {mapping, "mnesia.dir", "mnesia.dir",

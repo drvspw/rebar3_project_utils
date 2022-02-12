@@ -141,12 +141,12 @@ add_pre_start_hook_config(RelxConfig) ->
     lists:keydelete(extended_start_script_hooks, 1, RelxConfig) ++ [{extended_start_script_hooks, UpdatedStartupHooks}].
 
 configure_release_for_cuttlefish(RelxConfig) ->
-    Fn = fun({release, _, _}) -> true;
-            (_) -> false
-         end,
-    {Releases, Others} = lists:splitwith(Fn, RelxConfig),
-    NewReleases = [{release, Rel, Apps ++ [syntax_tools]} || {release, Rel, Apps} <- Releases],
-    NewReleases ++ Others.
+    SplitFn = fun({release, Rel, Apps}, {Releases, Others}) ->
+                      {[{release, Rel, Apps ++ [syntax_tools]}|Releases], Others};
+                 (Item, {Releases, Others}) -> {Releases, [Item|Others]}
+              end,
+    {Releases, Others} = lists:foldl(SplitFn, {[], []}, RelxConfig),
+    Releases ++ Others.
 
 find_all_cuttlefish_schema_files(Apps) ->
     SchemaFromDeps = lists:flatmap(fun(App) ->
