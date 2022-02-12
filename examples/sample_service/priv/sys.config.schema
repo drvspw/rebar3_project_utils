@@ -113,7 +113,7 @@
                              level => info,
                              %% only keep what you must
                              filters => [
-                                         {audit_filter, {fun logger_filters:domain/2, {stop, super, [audit]}}}
+                                         {audit_filter, {fun logger_filters:domain/2, {stop, not_equal, [audit]}}}
                                         ],
                              formatter => {logger_formatter,
                                            #{

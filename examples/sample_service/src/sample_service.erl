@@ -27,6 +27,8 @@
 
 -define(SERVER, ?MODULE).
 
+-include_lib("kernel/include/logger.hrl").
+
 %%%-------------------------------------------------------------------
 %% @doc sample_service public API
 %% @end
@@ -73,6 +75,8 @@ log_level(Level) ->
 %% @end
 %%%-------------------------------------------------------------------
 start(_StartType, _StartArgs) ->
+    ?LOG_INFO(#{id => ?MODULE, what => "starting application"}),
+    ?LOG_INFO("Another log message"),
   {ok, Pid} = ?MODULE:start_link(),
 
   {ok, Pid}.
@@ -100,6 +104,7 @@ start_link() ->
 %%                  }
 
 init([]) ->
+    ?LOG_INFO(#{id => ?MODULE, what => "starting supervisor"}, #{domain => [audit]}),
   RestartStrategy = {one_for_one, 4, 3600},
   Children = [], %% [ child_spec() ]
   {ok, {RestartStrategy, Children}}.
